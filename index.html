@@ -77,7 +77,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .skin-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:transform .25s,box-shadow .25s,border-color .25s;position:relative}
 .skin-card:hover{transform:translateY(-5px);box-shadow:0 12px 34px rgba(0,0,0,.4)}
 .rarity-bar{height:2px;width:100%}
-.gem-wrap{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg3),var(--bg4));position:relative}
+.gem-wrap{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg3),var(--bg4));position:relative;overflow:hidden}
+.gem-wrap::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(0deg,rgba(7,7,10,.75),transparent);pointer-events:none}
+.gem-corner{position:absolute;top:8px;left:8px;width:14px;height:14px;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);box-shadow:0 0 8px 1px rgba(0,0,0,.4);z-index:2}
 .gem{width:46%;aspect-ratio:1;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);box-shadow:0 0 24px 4px var(--glow,rgba(200,170,110,.25))}
 .skin-info{padding:9px 11px 11px}
 .skin-name{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.9rem;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -495,7 +497,11 @@ function skinCard(champId, s) {
     <div class="skin-card" data-id="${esc(s.id)}" onclick="_cardClick(this,()=>skinOpenDetail('${esc(champId)}','${esc(s.id)}'))">
       <div class="rarity-bar" style="background:${bg}"></div>
       <div class="gem-wrap">
-        <div class="gem" style="background:${bg};--glow:${glow}55"></div>
+        ${s.image
+          ? `<img src="${esc(s.image)}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+             <div class="gem" style="display:none;background:${bg};--glow:${glow}55"></div>
+             <span class="gem-corner" style="background:${bg}"></span>`
+          : `<div class="gem" style="background:${bg};--glow:${glow}55"></div>`}
       </div>
       <div class="skin-info">
         <div class="skin-name">${esc(s.name)}</div>
@@ -517,7 +523,9 @@ function skinOpenDetail(champId, skinId) {
   const bg=rarityBg(s.rarity); const isGradient=bg.startsWith('linear-gradient');
   openModal(s.name, `
     <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
-      <div class="gem" style="width:110px;background:${bg};--glow:${RARITY_COLORS[s.rarity]||'#888'}77"></div>
+      ${s.image
+        ? `<img src="${esc(s.image)}" style="width:100%;max-height:340px;object-fit:contain;border-radius:var(--rl);background:var(--bg3);cursor:zoom-in" onclick="openLightbox('${esc(s.image)}','${esc(s.name)}')">`
+        : `<div class="gem" style="width:110px;background:${bg};--glow:${RARITY_COLORS[s.rarity]||'#888'}77"></div>`}
       <div style="text-align:center">
         <div style="font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;${isGradient?`background:${bg};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`:`color:${bg}`}">${esc(s.rarity||'Normal')}</div>
         <div style="font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;margin-top:4px">${esc(s.name)}</div>
@@ -634,12 +642,13 @@ function saveSkin(e) {
   const champId = document.getElementById('skin-champ').value;
   const name = document.getElementById('skin-name').value.trim();
   const rarity = document.getElementById('skin-rarity').value;
+  const image = document.getElementById('skin-img').value.trim();
   const chromas = _collectChromaRows('skin-chroma-list');
   if(!champId||!name) { showToast('Choisis un champion et un nom','error'); return; }
   const db = loadData();
   const champ = db.champions.find(c=>c.id===champId);
   if(!champ) return;
-  champ.skins.unshift({id:generateId('sk'), name, rarity, chromas});
+  champ.skins.unshift({id:generateId('sk'), name, rarity, image: image||null, chromas});
   saveData(db);
   showToast('Skin ajouté ✓');
   addFormReset('skin');
@@ -678,6 +687,14 @@ function openEditSkin(champId, skinId) {
       <div class="form-row single">
         <div class="form-group"><label>Nom du skin *</label><input type="text" id="edit-skin-name" value="${esc(s.name)}" required></div>
       </div>
+      <div class="form-row single">
+        <div class="form-group"><label>URL image</label>
+          <div class="img-url-wrap">
+            <input type="url" id="edit-skin-img" value="${esc(s.image||'')}" placeholder="https://..." oninput="previewUrl('edit-skin-img','edit-skin-preview')">
+            <img id="edit-skin-preview" class="img-url-preview ${s.image?'show':''}" src="${esc(s.image||'')}" alt="Aperçu">
+          </div>
+        </div>
+      </div>
       <div class="form-group">
         <label>Chromas</label>
         <div class="chroma-builder" id="edit-skin-chroma-list"></div>
@@ -692,6 +709,7 @@ function saveEditSkin(e, oldChampId, skinId) {
   const newChampId = document.getElementById('edit-skin-champ').value;
   const name = document.getElementById('edit-skin-name').value.trim();
   const rarity = document.getElementById('edit-skin-rarity').value;
+  const image = document.getElementById('edit-skin-img').value.trim();
   const chromas = _collectChromaRows('edit-skin-chroma-list');
   if(!name) { showToast('Le nom est requis','error'); return; }
   const db = loadData();
@@ -699,7 +717,7 @@ function saveEditSkin(e, oldChampId, skinId) {
   if(!oldChamp) return;
   const idx = oldChamp.skins.findIndex(s=>s.id===skinId);
   if(idx===-1) return;
-  const skin = {...oldChamp.skins[idx], name, rarity, chromas};
+  const skin = {...oldChamp.skins[idx], name, rarity, image: image||null, chromas};
   oldChamp.skins.splice(idx,1);
   const newChamp = db.champions.find(c=>c.id===newChampId);
   if(!newChamp) { showToast('Champion introuvable','error'); return; }
@@ -767,6 +785,14 @@ function renderAdd() {
         </div>
         <div class="form-row single">
           <div class="form-group"><label>Nom du skin *</label><input type="text" id="skin-name" placeholder="ex: Star Guardian Ahri" required></div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group"><label>URL image</label>
+            <div class="img-url-wrap">
+              <input type="url" id="skin-img" placeholder="https://..." oninput="previewUrl('skin-img','skin-preview')">
+              <img id="skin-preview" class="img-url-preview" alt="Aperçu">
+            </div>
+          </div>
         </div>
         <div class="form-group">
           <label>Chromas (optionnel)</label>
@@ -855,8 +881,13 @@ function renderSkinResults(){
       </div>
       <div class="champ-result-skin">
         ${skin?`
-          <div class="champ-result-skin-name">${esc(skin.name)}</div>
-          <div class="champ-result-skin-rarity" style="${isGradient?`background:${bg};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`:`color:${bg}`}">${esc(skin.rarity||'Normal')}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            ${skin.image?`<img src="${esc(skin.image)}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--border2)" loading="lazy">`:''}
+            <div>
+              <div class="champ-result-skin-name">${esc(skin.name)}</div>
+              <div class="champ-result-skin-rarity" style="${isGradient?`background:${bg};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`:`color:${bg}`}">${esc(skin.rarity||'Normal')}</div>
+            </div>
+          </div>
           ${chroma?`<div class="champ-result-chroma"><span class="chroma-dot" style="background:${esc(chroma.color||'#888')}"></span>${esc(chroma.name)}</div>`:''}
         `:`<span style="color:var(--text-muted);font-size:.8rem">Aucun skin enregistré</span>`}
       </div>
