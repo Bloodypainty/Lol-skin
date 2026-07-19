@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoL Vault – Ma Collection</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07070a; --bg2:#0d0d12; --bg3:#121218; --bg4:#181820; --bg5:#1e1e28;
+  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.12);
+  --text:#eeeef2; --text-muted:#5a5a68; --text-dim:#9090a0;
+  --gold:#c8aa6e; --teal:#0ac8b9;
+  --normal:#8a8a95; --rare:#2ecc71; --epic:#3b9eff; --legendary:#f5a623; --mythic:#e0299b; --exalted:#c0392b;
+  --r:8px; --rl:14px; --rx:20px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Exo 2',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 40% at 15% 0%,rgba(200,170,110,0.06),transparent 60%),radial-gradient(ellipse 60% 40% at 90% 100%,rgba(10,200,185,0.06),transparent 60%);pointer-events:none;z-index:0}
+#app{display:flex;min-height:100vh;position:relative;z-index:1}
+
+/* SIDEBAR */
+#sidebar{width:225px;min-height:100vh;background:linear-gradient(180deg,var(--bg2),var(--bg));border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100}
+.sidebar-logo{padding:26px 22px 20px;border-bottom:1px solid var(--border)}
+.sidebar-logo h1{font-family:'Rajdhani',sans-serif;font-size:1.45rem;font-weight:700;letter-spacing:.14em;background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sidebar-logo span{font-size:.58rem;letter-spacing:.24em;color:var(--text-muted);text-transform:uppercase}
+.sidebar-section{padding:16px 18px 5px;font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--text-muted);font-weight:600}
+.sidebar-nav{padding:0 10px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:var(--r);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.94rem;font-weight:500;letter-spacing:.05em;color:var(--text-dim);transition:.22s;margin-bottom:2px;border:1px solid transparent;user-select:none}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:.22s;background:#444450}
+.nav-item[data-page=champions] .nav-dot{background:var(--gold)}
+.nav-item[data-page=random] .nav-dot{background:linear-gradient(135deg,var(--gold),var(--teal))}
+.nav-item.active{color:var(--text);background:var(--bg3)}
+.nav-item.active[data-page=champions]{border-color:rgba(200,170,110,.3);background:linear-gradient(90deg,rgba(200,170,110,.08),transparent)}
+.nav-item.active[data-page=random]{border-color:rgba(10,200,185,.3);background:linear-gradient(90deg,rgba(10,200,185,.08),transparent)}
+.nav-item.active[data-page=champions] .nav-dot{box-shadow:0 0 10px var(--gold)}
+.sidebar-bottom{margin-top:auto;padding:14px 10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+
+/* MAIN */
+#main{margin-left:225px;flex:1;padding:34px 38px;min-height:100vh}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;padding-bottom:18px;border-bottom:1px solid var(--border);position:relative;flex-wrap:wrap;gap:12px}
+.page-header::after{content:'';position:absolute;bottom:-1px;left:0;width:110px;height:1px}
+.page-header.lol-page::after{background:linear-gradient(90deg,var(--gold),transparent)}
+.page-title{font-family:'Rajdhani',sans-serif;font-size:2.1rem;font-weight:700;letter-spacing:.1em;line-height:1}
+.gold-accent{color:var(--gold);text-shadow:0 0 40px rgba(200,170,110,.45)}
+.count-badge{font-size:.72rem;padding:5px 12px;border-radius:20px;background:var(--bg3);border:1px solid var(--border2);color:var(--text-dim);font-family:'Rajdhani',sans-serif;letter-spacing:.1em}
+
+/* LANES */
+.lane-badge{display:inline-flex;align-items:center;gap:4px;font-size:.64rem;padding:3px 9px;border-radius:20px;background:var(--bg4);border:1px solid var(--border2);color:var(--text-dim);font-weight:600}
+.lane-badge .li{font-size:.8rem}
+.lane-check{cursor:pointer}
+.lane-check input{display:none}
+.lane-pill{display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.85rem;color:var(--text-dim);transition:.22s;cursor:pointer}
+.lane-check input:checked+.lane-pill{background:rgba(200,170,110,.12);border-color:rgba(200,170,110,.45);color:var(--gold)}
+.lanes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:9px}
+
+/* DIFFICULTY PIPS */
+.diff-pips{display:inline-flex;gap:3px;align-items:center}
+.diff-pip{width:8px;height:8px;border-radius:50%;background:var(--bg5);border:1px solid var(--border2)}
+.diff-pip.on{background:var(--gold);border-color:var(--gold)}
+
+/* CHAMPION SECTIONS */
+.champion-section{margin-bottom:32px}
+.champion-header{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding:14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);flex-wrap:wrap}
+.champion-avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--border2);flex-shrink:0}
+.champion-avatar.no-img{background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:var(--text-muted)}
+.champion-name{font-family:'Rajdhani',sans-serif;font-size:1.08rem;font-weight:700;letter-spacing:.05em}
+.champion-sub{display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap}
+.champion-lanes{display:flex;gap:5px;flex-wrap:wrap}
+.champion-actions{margin-left:auto;display:flex;gap:6px}
+.section-divider{border:none;border-top:1px solid var(--border);margin:0 0 32px}
+
+/* SKIN (GEM) CARDS */
+.skins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.skin-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:transform .25s,box-shadow .25s,border-color .25s;position:relative}
+.skin-card:hover{transform:translateY(-5px);box-shadow:0 12px 34px rgba(0,0,0,.4)}
+.rarity-bar{height:2px;width:100%}
+.gem-wrap{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg3),var(--bg4));position:relative;overflow:hidden}
+.gem-wrap::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(0deg,rgba(7,7,10,.75),transparent);pointer-events:none}
+.gem-corner{position:absolute;top:8px;left:8px;width:14px;height:14px;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);box-shadow:0 0 8px 1px rgba(0,0,0,.4);z-index:2}
+.gem{width:46%;aspect-ratio:1;clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);box-shadow:0 0 24px 4px var(--glow,rgba(200,170,110,.25))}
+.skin-info{padding:9px 11px 11px}
+.skin-name{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.9rem;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.skin-rarity-label{font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-top:3px}
+.chroma-row{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.chroma-dot{width:13px;height:13px;border-radius:50%;border:1px solid rgba(255,255,255,.3);flex-shrink:0}
+.card-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px;opacity:0;transition:.2s;z-index:10}
+.skin-card:hover .card-actions{opacity:1}
+.skin-card.selectable .card-actions{display:none!important}
+.card-btn{width:25px;height:25px;border-radius:6px;border:1px solid rgba(255,255,255,.1);cursor:pointer;font-size:.66rem;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);transition:.2s}
+.card-btn-edit{background:rgba(255,255,255,.12);color:#fff}
+.card-btn-move{background:rgba(255,255,255,.08);color:var(--text-dim);font-size:.62rem}
+.card-btn-delete{background:rgba(192,57,43,.4);color:#ffb0b0}
+.card-btn:hover{transform:scale(1.12)}
+
+/* TABS */
+.tabs{display:flex;gap:3px;margin-bottom:22px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:4px;width:fit-content;flex-wrap:wrap}
+.tab{padding:8px 20px;border-radius:calc(var(--r) - 2px);cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:.06em;font-size:.9rem;color:var(--text-muted);transition:.2s;border:none;background:none}
+.tab.active{background:var(--bg5);color:var(--text);box-shadow:0 1px 8px rgba(0,0,0,.3)}
+.tab:hover:not(.active){color:var(--text-dim)}
+
+/* FILTER */
+.filter-bar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+.filter-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:.72rem;cursor:pointer;transition:.22s;font-family:'Exo 2',sans-serif}
+.filter-btn:hover{background:var(--bg3);color:var(--text-dim);border-color:var(--border2)}
+.filter-btn.active{background:var(--bg4);color:var(--text);border-color:var(--border2)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.86);backdrop-filter:blur(10px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rx);width:100%;max-width:580px;max-height:92vh;overflow-y:auto;transform:scale(.93) translateY(20px);transition:transform .25s;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.modal-overlay.open .modal{transform:scale(1) translateY(0)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 26px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg2);z-index:2}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:1.35rem;font-weight:700;letter-spacing:.06em}
+.modal-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text-dim);cursor:pointer;font-size:1.05rem;transition:.2s;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--bg5);color:var(--text)}
+.modal-body{padding:22px}
+
+/* FORMS */
+.form-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:24px 26px;margin-bottom:18px}
+.form-section-title{font-family:'Rajdhani',sans-serif;font-size:1.02rem;font-weight:700;letter-spacing:.06em;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-row.single{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:6px}
+label{font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:var(--text-muted);font-weight:600}
+input[type=text],input[type=url],select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px 13px;color:var(--text);font-family:'Exo 2',sans-serif;font-size:.9rem;outline:none;transition:.2s;width:100%}
+input:focus,select:focus{border-color:rgba(255,255,255,.3);box-shadow:0 0 0 3px rgba(255,255,255,.04)}
+select option{background:var(--bg3)}
+.img-url-wrap{display:flex;flex-direction:column;gap:8px}
+.img-url-preview{width:100%;height:130px;object-fit:contain;border-radius:var(--r);background:var(--bg3);border:1px solid var(--border);display:none}
+.img-url-preview.show{display:block}
+input[type=color]{width:44px;height:38px;padding:2px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);cursor:pointer}
+
+/* CHROMA ROWS (builder) */
+.chroma-builder{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.chroma-row-input{display:flex;gap:8px;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px}
+.chroma-row-input input[type=text]{flex:1}
+.chroma-row-remove{width:28px;height:28px;border-radius:6px;border:1px solid rgba(220,50,50,.3);background:rgba(220,50,50,.15);color:#ff9b9b;cursor:pointer;flex-shrink:0}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:var(--r);border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.92rem;letter-spacing:.06em;transition:.2s;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.18);color:#fff}
+.btn-primary:hover{background:linear-gradient(135deg,rgba(255,255,255,.2),rgba(255,255,255,.1));box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.btn-danger{background:rgba(220,50,50,.2);border:1px solid rgba(220,50,50,.4);color:#ff8a8a}
+.btn-danger:hover{background:rgba(220,50,50,.32)}
+.btn-sm{padding:7px 14px;font-size:.8rem}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text-muted)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:20px}
+
+/* TOAST */
+#toast{position:fixed;bottom:26px;right:26px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:13px 20px;font-size:.87rem;color:var(--text);z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;max-width:300px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{border-color:rgba(0,192,96,.4)}
+#toast.error{border-color:rgba(220,50,50,.4)}
+
+/* EMPTY */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;text-align:center;color:var(--text-muted);gap:14px;grid-column:1/-1}
+.empty-state .icon{font-size:3.2rem;opacity:.5}
+.empty-state p{font-size:.88rem;line-height:1.6}
+
+/* HOME */
+.home-stats{display:flex;gap:16px;margin-bottom:26px;flex-wrap:wrap}
+.stat-block{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:18px 22px;flex:1;min-width:110px}
+.stat-number{font-family:'Rajdhani',sans-serif;font-size:2.1rem;font-weight:700;line-height:1}
+.stat-label{font-size:.66rem;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.game-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rx);padding:24px 20px;cursor:pointer;transition:transform .25s,box-shadow .25s,border-color .25s;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px}
+.game-card:hover{transform:translateY(-5px)}
+.game-card.lol{border-color:rgba(200,170,110,.25)}.game-card.lol::before{background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5}
+.game-card.lol:hover{box-shadow:0 10px 36px rgba(200,170,110,.15);border-color:rgba(200,170,110,.4)}
+.game-card.lol .game-card-name{color:var(--gold)}
+.game-card.rand{border-color:rgba(10,200,185,.25)}.game-card.rand::before{background:linear-gradient(90deg,transparent,var(--teal),transparent);opacity:.5}
+.game-card.rand:hover{box-shadow:0 10px 36px rgba(10,200,185,.15);border-color:rgba(10,200,185,.4)}
+.game-card.rand .game-card-name{background:linear-gradient(135deg,var(--teal),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.game-card-icon{font-size:1.8rem}
+.game-card-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.15rem;letter-spacing:.04em}
+.game-card-count{color:var(--text-muted);font-size:.76rem}
+
+/* RANDOMIZER WIZARD */
+.rand-page{max-width:760px}
+.rand-step{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rl);padding:20px 24px;margin-bottom:16px}
+.rand-step.disabled{opacity:.45;pointer-events:none}
+.rand-step-title{display:flex;align-items:center;gap:10px;font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.07em;color:var(--text-dim);margin-bottom:14px}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--text);flex-shrink:0}
+.rand-btn{font-size:.98rem;padding:12px 28px;border-radius:var(--rl);background:linear-gradient(135deg,rgba(200,170,110,.22),rgba(10,200,185,.2));border:1px solid rgba(200,170,110,.4);color:#fff;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.07em;cursor:pointer;transition:.25s;display:inline-flex;align-items:center;gap:9px}
+.rand-btn:hover{box-shadow:0 8px 26px rgba(200,170,110,.2)}
+.rand-btn.mini{padding:8px 18px;font-size:.82rem}
+/* Animation minimale : léger pulse, sans rotation */
+@keyframes spinBounce{0%{transform:scale(1);opacity:1}50%{transform:scale(.95);opacity:.65}100%{transform:scale(1);opacity:1}}
+.rand-btn.spinning{animation:spinBounce .4s ease}
+
+.lane-result-badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.lane-result-badge{display:flex;align-items:center;gap:8px;padding:10px 18px;border-radius:var(--rl);background:var(--bg4);border:1px solid rgba(200,170,110,.3);font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:.06em;font-size:1rem;color:var(--gold)}
+
+.champ-results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-top:6px}
+.champ-result-card{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rl);overflow:hidden}
+.champ-result-top{display:flex;align-items:center;gap:10px;padding:12px}
+.champ-result-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--border2);flex-shrink:0}
+.champ-result-avatar.no-img{background:var(--bg5);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.champ-result-lane{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--teal);font-weight:700}
+.champ-result-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem}
+.champ-result-skin{padding:10px 12px;border-top:1px solid var(--border);background:var(--bg4)}
+.champ-result-skin-name{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.86rem}
+.champ-result-skin-rarity{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-top:2px}
+.champ-result-chroma{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:.72rem;color:var(--text-dim)}
+
+/* SELECT MODE */
+.select-mode-bar{display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--bg2);border:1px solid rgba(200,170,110,.3);border-radius:var(--rl);margin-bottom:18px;flex-wrap:wrap}
+.skin-card.selectable{cursor:pointer}
+.skin-card.selected{outline:2px solid var(--gold);outline-offset:2px;box-shadow:0 0 20px rgba(200,170,110,.25)}
+.skin-card.selected::after{content:'✓';position:absolute;top:8px;left:8px;width:22px;height:22px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#07070a;font-weight:700;z-index:20}
+
+/* LIGHTBOX */
+.lightbox-overlay{visibility:hidden;opacity:0;position:fixed;inset:0;background:rgba(0,0,0,.92);backdrop-filter:blur(14px);z-index:9999;cursor:zoom-out;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:24px;transition:opacity .25s,visibility .25s}
+.lightbox-overlay.open{visibility:visible;opacity:1}
+#lightbox-img{max-width:min(480px,88vw);max-height:80vh;object-fit:contain;border-radius:14px;box-shadow:0 40px 100px rgba(0,0,0,.9);border:1px solid rgba(255,255,255,.12);display:block;transform:scale(.92);transition:transform .25s cubic-bezier(0.4,0,0.2,1)}
+.lightbox-overlay.open #lightbox-img{transform:scale(1)}
+.lightbox-name{font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:600;letter-spacing:.07em;color:rgba(255,255,255,.9);background:rgba(0,0,0,.5);padding:6px 18px;border-radius:20px;border:1px solid rgba(255,255,255,.1);white-space:nowrap}
+
+@media (max-width:760px){
+  #sidebar{position:relative;width:100%;min-height:auto;flex-direction:row;flex-wrap:wrap;padding:10px}
+  #main{margin-left:0;padding:22px 16px}
+  .sidebar-nav{display:flex;flex-wrap:wrap;padding:4px}
+  .sidebar-bottom{margin-top:0}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <h1>LOL VAULT</h1>
+      <span>League of Legends · Bloody</span>
+    </div>
+    <div class="sidebar-section">Collection</div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" data-page="home" onclick="navigate('home')"><div class="nav-dot"></div>Accueil</div>
+      <div class="nav-item" data-page="champions" onclick="navigate('champions')"><div class="nav-dot"></div>Champions</div>
+    </nav>
+    <div class="sidebar-section">Outils</div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" data-page="random" onclick="navigate('random')"><div class="nav-dot"></div>🎲 Randomizer</div>
+      <div class="nav-item" data-page="add" onclick="navigate('add')"><div class="nav-dot"></div>➕ Ajouter</div>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇ Exporter</button>
+      <label class="btn btn-ghost btn-sm" style="cursor:pointer;justify-content:center;">⬆ Importer<input type="file" accept=".json" style="display:none" onchange="handleImport(event)"></label>
+    </div>
+  </aside>
+  <main id="main"><div id="page-content"></div></main>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Détail</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="" style="display:none">
+  <div class="lightbox-name" id="lightbox-name"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════
+const DB_KEY = 'lolvault_data';
+const LANES = {
+  top:     {label:'Top',     icon:'⚔️'},
+  jungle:  {label:'Jungle',  icon:'🌲'},
+  mid:     {label:'Mid',     icon:'🔮'},
+  adc:     {label:'ADC',     icon:'🏹'},
+  support: {label:'Support', icon:'🛡️'},
+};
+const DIFFICULTIES = ['Facile','Modéré','Difficile'];
+// Ordre croissant de rareté, inspiré des gemmes du client LoL
+const RARITIES = ['Normal','Rare','Épique','Légendaire','Mythique','Ultime','Exalté','Transcendant'];
+const RARITY_COLORS = {
+  Normal:'#8a8a95', Rare:'#2ecc71', 'Épique':'#3b9eff', 'Légendaire':'#f5a623',
+  'Mythique':'#e0299b', Ultime:'#a78bfa', 'Exalté':'#c0392b', Transcendant:'#e8c766'
+};
+const RARITY_GRADIENTS = {
+  Ultime:'linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb,#a78bfa)',
+  Transcendant:'linear-gradient(135deg,#fff6d5,#e8c766,#ffffff)'
+};
+const DEFAULT_DATA = { champions: [] };
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    const saved = JSON.parse(raw);
+    if(!saved.champions) saved.champions=[];
+    return saved;
+  } catch(e) { return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+}
+function saveData(d) { localStorage.setItem(DB_KEY, JSON.stringify(d)); }
+function generateId(p) { return p+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
+
+function exportData() {
+  const d = loadData();
+  const blob = new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url;
+  a.download=`lolvault_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+}
+function importData(file) {
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = e => {
+      try {
+        const raw = JSON.parse(e.target.result);
+        let d;
+        if(raw && Array.isArray(raw.champions)) d = { champions: raw.champions };
+        else if(raw && raw.lol && Array.isArray(raw.lol.champions)) d = { champions: raw.lol.champions };
+        else throw new Error("Format non reconnu");
+        saveData(d); res(d);
+      } catch(err) { rej(err instanceof Error ? err : new Error('JSON invalide')); }
+    };
+    r.readAsText(file);
+  });
+}
+async function handleImport(e) {
+  const f=e.target.files[0]; if(!f) return;
+  try { const d=await importData(f); showToast(`Import réussi ✓ (${d.champions.length} champions)`); refresh(); }
+  catch(err) { showToast('Erreur : '+err.message,'error'); }
+  e.target.value='';
+}
+
+// ═══════════════════════════════════════════════════════
+//  APP / NAVIGATION
+// ═══════════════════════════════════════════════════════
+let currentPage = 'home';
+
+function navigate(page) {
+  currentPage = page;
+  _exitSelectMode(true);
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active', el.dataset.page===page));
+  const c = document.getElementById('page-content');
+  switch(page) {
+    case 'home':      c.innerHTML = renderHome(); break;
+    case 'champions': c.innerHTML = renderChampions(); break;
+    case 'random':    c.innerHTML = renderRandom(); break;
+    case 'add':       c.innerHTML = renderAdd(); break;
+    default: c.innerHTML='<p>404</p>';
+  }
+}
+function refresh() { navigate(currentPage); }
+
+// Modal
+function openModal(title, body) {
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); document.body.style.overflow=''; }
+function closeModalOnBg(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+
+// Toast
+let _tt;
+function showToast(msg,type='success') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`show ${type}`;
+  clearTimeout(_tt); _tt=setTimeout(()=>{t.className='';},3000);
+}
+
+// Lightbox
+function openLightbox(src, name) {
+  if(!src) return;
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  const nm = document.getElementById('lightbox-name');
+  img.src = src; img.style.display = 'block';
+  nm.textContent = name || '';
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => { document.getElementById('lightbox-img').src = ''; }, 300);
+}
+
+// Utils
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function previewUrl(inputId, previewId) {
+  const url = document.getElementById(inputId)?.value.trim();
+  const img = document.getElementById(previewId);
+  if(!img) return;
+  if(url) { img.src=url; img.classList.add('show'); } else { img.classList.remove('show'); }
+}
+function rarityBg(r) { return RARITY_GRADIENTS[r] || RARITY_COLORS[r] || RARITY_COLORS.Normal; }
+function diffLevel(d) { return DIFFICULTIES.indexOf(d)+1; } // 1,2,3 (0 if unknown -> pips all off)
+function diffPips(d) {
+  const lvl = diffLevel(d);
+  return `<span class="diff-pips">${[1,2,3].map(i=>`<span class="diff-pip ${i<=lvl?'on':''}"></span>`).join('')}</span>`;
+}
+function laneBadges(lanes) {
+  return (lanes||[]).map(l=>LANES[l]?`<span class="lane-badge"><span class="li">${LANES[l].icon}</span>${LANES[l].label}</span>`:'').join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  HOME
+// ═══════════════════════════════════════════════════════
+function renderHome() {
+  const db=loadData();
+  const totalSkins = db.champions.reduce((a,c)=>a+(c.skins?.length||0),0);
+  const totalChromas = db.champions.reduce((a,c)=>a+(c.skins||[]).reduce((b,s)=>b+(s.chromas?.length||0),0),0);
+  return `
+    <div class="page-header"><div><div class="page-title" style="color:var(--text)">MA COLLECTION</div><div style="color:var(--text-muted);font-size:.8rem;margin-top:4px;letter-spacing:.1em">LOL VAULT · BLOODY</div></div><button class="btn btn-primary" onclick="navigate('add')">➕ Ajouter</button></div>
+    <div class="home-stats">
+      <div class="stat-block"><div class="stat-number">${db.champions.length}</div><div class="stat-label">Champions</div></div>
+      <div class="stat-block"><div class="stat-number">${totalSkins}</div><div class="stat-label">Skins</div></div>
+      <div class="stat-block"><div class="stat-number">${totalChromas}</div><div class="stat-label">Chromas</div></div>
+    </div>
+    <div class="home-grid">
+      <div class="game-card lol" onclick="navigate('champions')">
+        <div class="game-card-icon">🏆</div>
+        <div class="game-card-name">Champions</div>
+        <div class="game-card-count">${db.champions.length} champion${db.champions.length!==1?'s':''}</div>
+      </div>
+      <div class="game-card rand" onclick="navigate('random')">
+        <div class="game-card-icon">🎲</div>
+        <div class="game-card-name">Randomizer</div>
+        <div class="game-card-count">Lanes · Champions · Skins</div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHAMPIONS (collection)
+// ═══════════════════════════════════════════════════════
+function renderChampions() {
+  const db=loadData();
+  const totalSkins = db.champions.reduce((a,c)=>a+(c.skins?.length||0),0);
+  return `
+    <div class="page-header lol-page"><div class="page-title gold-accent">CHAMPIONS</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="count-badge">${db.champions.length} champions · ${totalSkins} skins</span>
+        <button class="btn btn-ghost btn-sm" onclick="toggleSelectMode()">☑ Sélectionner</button>
+      </div>
+    </div>
+    <div class="filter-bar" id="lane-filter-bar">
+      <button class="filter-btn active" data-lane="all" onclick="laneFilter(this,'all')">Toutes lanes</button>
+      ${Object.entries(LANES).map(([k,v])=>`<button class="filter-btn" data-lane="${k}" onclick="laneFilter(this,'${k}')">${v.icon} ${v.label}</button>`).join('')}
+    </div>
+    <div id="select-bar-container"></div>
+    <div id="champ-list">${renderChampList('all')}</div>`;
+}
+function laneFilter(btn, lane) {
+  document.querySelectorAll('#lane-filter-bar .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('champ-list').innerHTML = renderChampList(lane);
+}
+function renderChampList(lane) {
+  const db=loadData();
+  let champs = db.champions;
+  if(lane!=='all') champs = champs.filter(c=>(c.lanes||[]).includes(lane));
+  if(!champs.length) return `<div class="empty-state"><div class="icon">🏆</div><p>${lane!=='all'?'Aucun champion pour cette lane':'Aucun champion pour le moment'}.<br>Ajoute-en depuis <strong>➕ Ajouter</strong>.</p></div>`;
+  return champs.map(c=>`
+    <div class="champion-section">
+      <div class="champion-header">
+        ${c.image?`<img src="${esc(c.image)}" class="champion-avatar" onerror="this.className='champion-avatar no-img';this.textContent='🏆'">`:`<div class="champion-avatar no-img">🏆</div>`}
+        <div>
+          <div class="champion-name">${esc(c.name)}</div>
+          <div class="champion-sub">
+            ${diffPips(c.difficulty)}
+            <span style="font-size:.7rem;color:var(--text-muted)">${(c.skins||[]).length} skin${(c.skins||[]).length!==1?'s':''}</span>
+          </div>
+          <div class="champion-lanes" style="margin-top:6px">${laneBadges(c.lanes)}</div>
+        </div>
+        <div class="champion-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditChampion('${esc(c.id)}')">✏ Modifier</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteChampion('${esc(c.id)}')">🗑</button>
+        </div>
+      </div>
+      <div class="skins-grid">${(c.skins||[]).length===0?`<p style="color:var(--text-muted);font-size:.85rem;grid-column:1/-1">Aucun skin.</p>`:c.skins.map(s=>skinCard(c.id,s)).join('')}</div>
+    </div><hr class="section-divider">`).join('');
+}
+function skinCard(champId, s) {
+  const bg = rarityBg(s.rarity);
+  const isGradient = bg.startsWith('linear-gradient');
+  const glow = RARITY_COLORS[s.rarity]||RARITY_COLORS.Normal;
+  return `
+    <div class="skin-card" data-id="${esc(s.id)}" onclick="_cardClick(this,()=>skinOpenDetail('${esc(champId)}','${esc(s.id)}'))">
+      <div class="rarity-bar" style="background:${bg}"></div>
+      <div class="gem-wrap">
+        ${s.image
+          ? `<img src="${esc(s.image)}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+             <div class="gem" style="display:none;background:${bg};--glow:${glow}55"></div>
+             <span class="gem-corner" style="background:${bg}"></span>`
+          : `<div class="gem" style="background:${bg};--glow:${glow}55"></div>`}
+      </div>
+      <div class="skin-info">
+        <div class="skin-name">${esc(s.name)}</div>
+        <div class="skin-rarity-label" style="${isGradient?`background:${bg};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`:`color:${bg}`}">${esc(s.rarity||'Normal')}</div>
+        ${s.chromas&&s.chromas.length?`<div class="chroma-row">${s.chromas.slice(0,6).map(ch=>`<span class="chroma-dot" style="background:${esc(ch.color||'#888')}" title="${esc(ch.name)}"></span>`).join('')}${s.chromas.length>6?`<span style="font-size:.6rem;color:var(--text-muted)">+${s.chromas.length-6}</span>`:''}</div>`:''}
+      </div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="card-btn card-btn-move" onclick="moveSkin('${esc(champId)}','${esc(s.id)}',-1)" title="Déplacer avant">◀</button>
+        <button class="card-btn card-btn-move" onclick="moveSkin('${esc(champId)}','${esc(s.id)}',1)" title="Déplacer après">▶</button>
+        <button class="card-btn card-btn-edit" onclick="openEditSkin('${esc(champId)}','${esc(s.id)}')">✏</button>
+        <button class="card-btn card-btn-delete" onclick="deleteSkin('${esc(champId)}','${esc(s.id)}')">🗑</button>
+      </div>
+    </div>`;
+}
+function skinOpenDetail(champId, skinId) {
+  const db=loadData();
+  const c=db.champions.find(x=>x.id===champId); const s=c?.skins.find(x=>x.id===skinId);
+  if(!s) return;
+  const bg=rarityBg(s.rarity); const isGradient=bg.startsWith('linear-gradient');
+  openModal(s.name, `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+      ${s.image
+        ? `<img src="${esc(s.image)}" style="width:100%;max-height:340px;object-fit:contain;border-radius:var(--rl);background:var(--bg3);cursor:zoom-in" onclick="openLightbox('${esc(s.image)}','${esc(s.name)}')">`
+        : `<div class="gem" style="width:110px;background:${bg};--glow:${RARITY_COLORS[s.rarity]||'#888'}77"></div>`}
+      <div style="text-align:center">
+        <div style="font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;${isGradient?`background:${bg};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`:`color:${bg}`}">${esc(s.rarity||'Normal')}</div>
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1.3rem;font-weight:700;margin-top:4px">${esc(s.name)}</div>
+        <div style="color:var(--text-muted);font-size:.8rem;margin-top:2px">${esc(c.name)}</div>
+      </div>
+      ${s.chromas&&s.chromas.length?`
+        <div style="width:100%">
+          <div style="font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:8px">✨ Chromas · ${s.chromas.length}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            ${s.chromas.map(ch=>`<div style="display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:5px 12px 5px 6px">
+              <span style="width:16px;height:16px;border-radius:50%;background:${esc(ch.color||'#888')};border:1px solid rgba(255,255,255,.3)"></span>
+              <span style="font-size:.8rem">${esc(ch.name)}</span>
+            </div>`).join('')}
+          </div>
+        </div>` : `<p style="color:var(--text-muted);font-size:.82rem">Aucun chroma enregistré.</p>`}
+    </div>`);
+}
+
+// ── Champion CRUD ──
+function saveChampion(e) {
+  e.preventDefault();
+  const name = document.getElementById('champ-name').value.trim();
+  const difficulty = document.getElementById('champ-difficulty').value;
+  const image = document.getElementById('champ-img').value.trim();
+  const lanes = [...document.querySelectorAll('#champ-lanes input:checked')].map(i=>i.value);
+  if(!name) { showToast('Le nom est requis','error'); return; }
+  if(!lanes.length) { showToast('Choisis au moins une lane','error'); return; }
+  const db = loadData();
+  db.champions.unshift({id:generateId('champ'), name, difficulty, image: image||null, lanes, skins:[]});
+  saveData(db);
+  showToast('Champion ajouté ✓');
+  addFormReset('champ');
+}
+function deleteChampion(id) {
+  if(!confirm('Supprimer ce champion et tous ses skins ?')) return;
+  const db = loadData();
+  db.champions = db.champions.filter(c=>c.id!==id);
+  saveData(db); showToast('Champion supprimé ✓'); refresh();
+}
+function openEditChampion(id) {
+  const db = loadData();
+  const c = db.champions.find(x=>x.id===id);
+  if(!c) return;
+  openModal('Modifier : '+c.name, `
+    <form onsubmit="saveEditChampion(event,'${esc(id)}')">
+      <div class="form-row">
+        <div class="form-group"><label>Nom *</label><input type="text" id="edit-champ-name" value="${esc(c.name)}" required></div>
+        <div class="form-group"><label>Difficulté</label>
+          <select id="edit-champ-difficulty">
+            ${DIFFICULTIES.map(d=>`<option value="${d}" ${c.difficulty===d?'selected':''}>${d}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group"><label>URL image</label>
+          <div class="img-url-wrap">
+            <input type="url" id="edit-champ-img" value="${esc(c.image||'')}" placeholder="https://..." oninput="previewUrl('edit-champ-img','edit-champ-preview')">
+            <img id="edit-champ-preview" class="img-url-preview ${c.image?'show':''}" src="${esc(c.image||'')}" alt="Aperçu">
+          </div>
+        </div>
+      </div>
+      <div class="form-group"><label>Lanes</label>
+        <div class="lanes-grid" id="edit-champ-lanes">
+          ${Object.entries(LANES).map(([k,v])=>`
+            <label class="lane-check">
+              <input type="checkbox" value="${k}" ${(c.lanes||[]).includes(k)?'checked':''}>
+              <div class="lane-pill">${v.icon} ${v.label}</div>
+            </label>`).join('')}
+        </div>
+      </div>
+      <div class="btn-row"><button type="submit" class="btn btn-primary">💾 Enregistrer</button><button type="button" class="btn btn-ghost" onclick="closeModal()">✕ Annuler</button></div>
+    </form>`);
+}
+function saveEditChampion(e, id) {
+  e.preventDefault();
+  const name = document.getElementById('edit-champ-name').value.trim();
+  const difficulty = document.getElementById('edit-champ-difficulty').value;
+  const image = document.getElementById('edit-champ-img').value.trim();
+  const lanes = [...document.querySelectorAll('#edit-champ-lanes input:checked')].map(i=>i.value);
+  if(!name) { showToast('Le nom est requis','error'); return; }
+  if(!lanes.length) { showToast('Choisis au moins une lane','error'); return; }
+  const db = loadData();
+  const idx = db.champions.findIndex(c=>c.id===id);
+  if(idx===-1) return;
+  db.champions[idx] = {...db.champions[idx], name, difficulty, image: image||null, lanes};
+  saveData(db);
+  showToast('Champion modifié ✓');
+  closeModal();
+  navigate('champions');
+}
+
+// ── Skin CRUD ──
+function _collectChromaRows(containerId) {
+  return [...document.querySelectorAll(`#${containerId} .chroma-row-input`)].map(row=>({
+    id: row.dataset.id || generateId('chroma'),
+    name: row.querySelector('.chroma-name-input').value.trim(),
+    color: row.querySelector('.chroma-color-input').value
+  })).filter(ch=>ch.name);
+}
+function addChromaRow(containerId, existing=null) {
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  const div = document.createElement('div');
+  div.className = 'chroma-row-input';
+  if(existing?.id) div.dataset.id = existing.id;
+  div.innerHTML = `
+    <input type="color" class="chroma-color-input" value="${existing?.color||'#c8aa6e'}">
+    <input type="text" class="chroma-name-input" placeholder="Nom du chroma" value="${esc(existing?.name||'')}">
+    <button type="button" class="chroma-row-remove" onclick="this.parentElement.remove()">✕</button>`;
+  container.appendChild(div);
+}
+function saveSkin(e) {
+  e.preventDefault();
+  const champId = document.getElementById('skin-champ').value;
+  const name = document.getElementById('skin-name').value.trim();
+  const rarity = document.getElementById('skin-rarity').value;
+  const image = document.getElementById('skin-img').value.trim();
+  const chromas = _collectChromaRows('skin-chroma-list');
+  if(!champId||!name) { showToast('Choisis un champion et un nom','error'); return; }
+  const db = loadData();
+  const champ = db.champions.find(c=>c.id===champId);
+  if(!champ) return;
+  champ.skins.unshift({id:generateId('sk'), name, rarity, image: image||null, chromas});
+  saveData(db);
+  showToast('Skin ajouté ✓');
+  addFormReset('skin');
+}
+function deleteSkin(champId, skinId) {
+  if(!confirm('Supprimer ce skin ?')) return;
+  const db = loadData();
+  const champ = db.champions.find(c=>c.id===champId);
+  if(champ) champ.skins = champ.skins.filter(s=>s.id!==skinId);
+  saveData(db); showToast('Skin supprimé ✓'); refresh();
+}
+function moveSkin(champId, skinId, dir) {
+  const db = loadData();
+  const champ = db.champions.find(c=>c.id===champId);
+  if(!champ) return;
+  const idx = champ.skins.findIndex(s=>s.id===skinId);
+  const newIdx = idx+dir;
+  if(idx===-1||newIdx<0||newIdx>=champ.skins.length) return;
+  [champ.skins[idx], champ.skins[newIdx]] = [champ.skins[newIdx], champ.skins[idx]];
+  saveData(db); refresh();
+}
+function openEditSkin(champId, skinId) {
+  const db = loadData();
+  const champ = db.champions.find(c=>c.id===champId);
+  const s = champ?.skins.find(x=>x.id===skinId);
+  if(!s) return;
+  const champOpts = db.champions.map(c=>`<option value="${esc(c.id)}" ${c.id===champId?'selected':''}>${esc(c.name)}</option>`).join('');
+  openModal('Modifier : '+s.name, `
+    <form onsubmit="saveEditSkin(event,'${esc(champId)}','${esc(skinId)}')">
+      <div class="form-row">
+        <div class="form-group"><label>Champion *</label><select id="edit-skin-champ">${champOpts}</select></div>
+        <div class="form-group"><label>Rareté</label>
+          <select id="edit-skin-rarity">${RARITIES.map(r=>`<option value="${r}" ${s.rarity===r?'selected':''}>${r}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group"><label>Nom du skin *</label><input type="text" id="edit-skin-name" value="${esc(s.name)}" required></div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group"><label>URL image</label>
+          <div class="img-url-wrap">
+            <input type="url" id="edit-skin-img" value="${esc(s.image||'')}" placeholder="https://..." oninput="previewUrl('edit-skin-img','edit-skin-preview')">
+            <img id="edit-skin-preview" class="img-url-preview ${s.image?'show':''}" src="${esc(s.image||'')}" alt="Aperçu">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Chromas</label>
+        <div class="chroma-builder" id="edit-skin-chroma-list"></div>
+        <div class="btn-row" style="margin-top:8px"><button type="button" class="btn btn-ghost btn-sm" onclick="addChromaRow('edit-skin-chroma-list')">+ Ajouter un chroma</button></div>
+      </div>
+      <div class="btn-row"><button type="submit" class="btn btn-primary">💾 Enregistrer</button><button type="button" class="btn btn-ghost" onclick="closeModal()">✕ Annuler</button></div>
+    </form>`);
+  (s.chromas||[]).forEach(ch=>addChromaRow('edit-skin-chroma-list', ch));
+}
+function saveEditSkin(e, oldChampId, skinId) {
+  e.preventDefault();
+  const newChampId = document.getElementById('edit-skin-champ').value;
+  const name = document.getElementById('edit-skin-name').value.trim();
+  const rarity = document.getElementById('edit-skin-rarity').value;
+  const image = document.getElementById('edit-skin-img').value.trim();
+  const chromas = _collectChromaRows('edit-skin-chroma-list');
+  if(!name) { showToast('Le nom est requis','error'); return; }
+  const db = loadData();
+  const oldChamp = db.champions.find(c=>c.id===oldChampId);
+  if(!oldChamp) return;
+  const idx = oldChamp.skins.findIndex(s=>s.id===skinId);
+  if(idx===-1) return;
+  const skin = {...oldChamp.skins[idx], name, rarity, image: image||null, chromas};
+  oldChamp.skins.splice(idx,1);
+  const newChamp = db.champions.find(c=>c.id===newChampId);
+  if(!newChamp) { showToast('Champion introuvable','error'); return; }
+  newChamp.skins.unshift(skin);
+  saveData(db);
+  showToast('Skin modifié ✓');
+  closeModal();
+  navigate('champions');
+}
+
+// ═══════════════════════════════════════════════════════
+//  AJOUTER — 2 formulaires séparés
+// ═══════════════════════════════════════════════════════
+function renderAdd() {
+  const db = loadData();
+  const champOpts = db.champions.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  return `
+    <div class="page-header"><div class="page-title">➕ AJOUTER</div></div>
+    <div class="tabs">
+      <button type="button" class="tab active" id="add-tab-champ" onclick="addTab('champ')">+ Champion</button>
+      <button type="button" class="tab" id="add-tab-skin" onclick="addTab('skin')">+ Skin</button>
+    </div>
+
+    <div class="form-section" id="add-form-champ">
+      <div class="form-section-title">🏆 Ajouter un Champion</div>
+      <form onsubmit="saveChampion(event)">
+        <div class="form-row">
+          <div class="form-group"><label>Nom *</label><input type="text" id="champ-name" placeholder="ex: Ahri" required></div>
+          <div class="form-group"><label>Difficulté</label>
+            <select id="champ-difficulty">${DIFFICULTIES.map(d=>`<option value="${d}" ${d==='Modéré'?'selected':''}>${d}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group"><label>URL image</label>
+            <div class="img-url-wrap">
+              <input type="url" id="champ-img" placeholder="https://..." oninput="previewUrl('champ-img','champ-preview')">
+              <img id="champ-preview" class="img-url-preview" alt="Aperçu">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Lanes * (plusieurs possibles)</label>
+          <div class="lanes-grid" id="champ-lanes">
+            ${Object.entries(LANES).map(([k,v])=>`
+              <label class="lane-check">
+                <input type="checkbox" value="${k}">
+                <div class="lane-pill">${v.icon} ${v.label}</div>
+              </label>`).join('')}
+          </div>
+        </div>
+        <div class="btn-row"><button type="submit" class="btn btn-primary">💾 Enregistrer</button></div>
+      </form>
+    </div>
+
+    <div class="form-section" id="add-form-skin" style="display:none">
+      <div class="form-section-title">🎨 Ajouter un Skin</div>
+      <form onsubmit="saveSkin(event)">
+        <div class="form-row">
+          <div class="form-group"><label>Champion *</label>
+            <select id="skin-champ" required><option value="">-- Champion --</option>${champOpts}</select>
+          </div>
+          <div class="form-group"><label>Rareté</label>
+            <select id="skin-rarity">${RARITIES.map(r=>`<option value="${r}" ${r==='Normal'?'selected':''}>${r}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group"><label>Nom du skin *</label><input type="text" id="skin-name" placeholder="ex: Star Guardian Ahri" required></div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group"><label>URL image</label>
+            <div class="img-url-wrap">
+              <input type="url" id="skin-img" placeholder="https://..." oninput="previewUrl('skin-img','skin-preview')">
+              <img id="skin-preview" class="img-url-preview" alt="Aperçu">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Chromas (optionnel)</label>
+          <div class="chroma-builder" id="skin-chroma-list"></div>
+          <div class="btn-row" style="margin-top:8px"><button type="button" class="btn btn-ghost btn-sm" onclick="addChromaRow('skin-chroma-list')">+ Ajouter un chroma</button></div>
+        </div>
+        <div class="btn-row"><button type="submit" class="btn btn-primary">💾 Enregistrer</button></div>
+      </form>
+    </div>`;
+}
+function addTab(tab) {
+  document.getElementById('add-tab-champ').classList.toggle('active', tab==='champ');
+  document.getElementById('add-tab-skin').classList.toggle('active', tab==='skin');
+  document.getElementById('add-form-champ').style.display = tab==='champ'?'':'none';
+  document.getElementById('add-form-skin').style.display = tab==='skin'?'':'none';
+}
+function addFormReset(which) {
+  document.getElementById('page-content').innerHTML = renderAdd();
+  if(which==='skin') addTab('skin');
+}
+
+// ═══════════════════════════════════════════════════════
+//  RANDOMIZER — wizard en 3 étapes
+// ═══════════════════════════════════════════════════════
+let _rolledLanes = [];
+let _rolledChamps = []; // [{lane, champ}]
+let _rolledResults = []; // [{lane, champ, skin, chroma}]
+
+function renderRandom(){
+  return `
+    <div class="rand-page">
+      <div class="page-header" style="position:relative">
+        <div><div class="page-title" style="background:linear-gradient(135deg,var(--gold),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">RANDOMIZER</div><div style="color:var(--text-muted);font-size:.8rem;margin-top:4px;letter-spacing:.1em">LANES · CHAMPIONS · SKINS</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="rollAll()">🔁 Tout relancer</button>
+      </div>
+
+      <div class="rand-step">
+        <div class="rand-step-title"><div class="step-num">1</div>Randomizer les 2 lanes</div>
+        <button class="rand-btn" onclick="rollLanes()">🎲 Tirer 2 lanes</button>
+        <div class="lane-result-badges" id="lane-results">${renderLaneResults()}</div>
+      </div>
+
+      <div class="rand-step ${_rolledLanes.length<2?'disabled':''}" id="step2">
+        <div class="rand-step-title"><div class="step-num">2</div>Randomizer 4 champions (2 par lane, en cas de ban)</div>
+        <button class="rand-btn mini" onclick="rollChamps()">🎲 Tirer 4 champions</button>
+        <div class="champ-results-grid" id="champ-results">${renderChampResults()}</div>
+      </div>
+
+      <div class="rand-step ${_rolledChamps.length===0?'disabled':''}" id="step3">
+        <div class="rand-step-title"><div class="step-num">3</div>Randomizer les skins (+ chroma si dispo)</div>
+        <button class="rand-btn mini" onclick="rollSkins()">🎲 Tirer les skins</button>
+        <div class="champ-results-grid" id="skin-results">${renderSkinResults()}</div>
+      </div>
+    </div>`;
+}
+function renderLaneResults(){
+  if(!_rolledLanes.length) return '';
+  return _rolledLanes.map(l=>`<div class="lane-result-badge">${LANES[l].icon} ${LANES[l].label}</div>`).join('');
+}
+function renderChampResults(){
+  if(!_rolledChamps.length) return '';
+  return _rolledChamps.map(({lane,champ})=>`
+    <div class="champ-result-card">
+      <div class="champ-result-top">
+        ${champ.image?`<img src="${esc(champ.image)}" class="champ-result-avatar" onerror="this.className='champ-result-avatar no-img';this.textContent='🏆'">`:`<div class="champ-result-avatar no-img">🏆</div>`}
+        <div>
+          <div class="champ-result-lane">${LANES[lane].icon} ${LANES[lane].label}</div>
+          <div class="champ-result-name">${esc(champ.name)}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function renderSkinResults(){
+  if(!_rolledResults.length) return '';
+  return _rolledResults.map(({lane,champ,skin,chroma})=>{
+    const bg = skin?rarityBg(skin.rarity):null;
+    const isGradient = bg&&bg.startsWith('linear-gradient');
+    return `
+    <div class="champ-result-card">
+      <div class="champ-result-top">
+        ${champ.image?`<img src="${esc(champ.image)}" class="champ-result-avatar" onerror="this.className='champ-result-avatar no-img';this.textContent='🏆'">`:`<div class="champ-result-avatar no-img">🏆</div>`}
+        <div>
+          <div class="champ-result-lane">${LANES[lane].icon} ${LANES[lane].label}</div>
+          <div class="champ-result-name">${esc(champ.name)}</div>
+        </div>
+      </div>
+      <div class="champ-result-skin">
+        ${skin?`
+          <div style="display:flex;align-items:center;gap:10px">
+            ${skin.image?`<img src="${esc(skin.image)}" style="width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--border2)" loading="lazy">`:''}
+            <div>
+              <div class="champ-result-skin-name">${esc(skin.name)}</div>
+              <div class="champ-result-skin-rarity" style="${isGradient?`background:${bg};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`:`color:${bg}`}">${esc(skin.rarity||'Normal')}</div>
+            </div>
+          </div>
+          ${chroma?`<div class="champ-result-chroma"><span class="chroma-dot" style="background:${esc(chroma.color||'#888')}"></span>${esc(chroma.name)}</div>`:''}
+        `:`<span style="color:var(--text-muted);font-size:.8rem">Aucun skin enregistré</span>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+function rollLanes(){
+  const btn=document.querySelector('.rand-page .rand-btn'); if(btn){btn.classList.add('spinning');setTimeout(()=>btn.classList.remove('spinning'),400);}
+  const keys=Object.keys(LANES);
+  const shuffled=[...keys].sort(()=>Math.random()-.5);
+  _rolledLanes=shuffled.slice(0,2);
+  _rolledChamps=[]; _rolledResults=[];
+  document.getElementById('page-content').innerHTML = renderRandom();
+}
+function rollChamps(){
+  if(_rolledLanes.length<2){showToast("Tire d'abord les 2 lanes",'error');return;}
+  const db=loadData();
+  const picked=[];
+  let missing=false;
+  for(const lane of _rolledLanes){
+    let pool = db.champions.filter(c=>(c.lanes||[]).includes(lane) && !picked.find(p=>p.champ.id===c.id));
+    for(let i=0;i<2;i++){
+      if(!pool.length){ missing=true; break; }
+      const idx=Math.floor(Math.random()*pool.length);
+      picked.push({lane,champ:pool[idx]});
+      pool.splice(idx,1);
+    }
+  }
+  if(!picked.length){ showToast('Aucun champion ne joue ces lanes','error'); return; }
+  if(missing) showToast('Pas assez de champions enregistrés pour remplir les 4 (résultat partiel)','error');
+  else showToast('4 champions tirés ✓');
+  _rolledChamps=picked; _rolledResults=[];
+  document.getElementById('page-content').innerHTML = renderRandom();
+}
+function rollSkins(){
+  if(!_rolledChamps.length){showToast("Tire d'abord les champions",'error');return;}
+  _rolledResults = _rolledChamps.map(({lane,champ})=>{
+    const skins = champ.skins||[];
+    if(!skins.length) return {lane,champ,skin:null,chroma:null};
+    const skin = skins[Math.floor(Math.random()*skins.length)];
+    let chroma=null;
+    if(skin.chromas&&skin.chromas.length) chroma = skin.chromas[Math.floor(Math.random()*skin.chromas.length)];
+    return {lane,champ,skin,chroma};
+  });
+  showToast('Skins tirés ✓');
+  document.getElementById('page-content').innerHTML = renderRandom();
+}
+function rollAll(){
+  rollLanes();
+  rollChamps();
+  rollSkins();
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODE SÉLECTION MULTIPLE
+// ═══════════════════════════════════════════════════════
+let _selectMode = false;
+let _selectedIds = new Set();
+
+function toggleSelectMode() {
+  if(_selectMode) { _exitSelectMode(); return; }
+  _selectMode = true;
+  _selectedIds = new Set();
+  _injectSelectBar();
+}
+function _exitSelectMode(silent=false) {
+  _selectMode = false;
+  _selectedIds = new Set();
+  const bar = document.getElementById('select-bar-container');
+  if(bar) bar.innerHTML = '';
+  document.querySelectorAll('.skin-card.selectable').forEach(c=>{
+    c.classList.remove('selectable','selected');
+    c.querySelectorAll('.card-actions').forEach(a=>a.style.display='');
+  });
+  if(!silent) refresh();
+}
+function _cardClick(el, defaultAction) {
+  if(_selectMode) {
+    const id = el.dataset.id;
+    if(!id) return;
+    if(_selectedIds.has(id)) { _selectedIds.delete(id); el.classList.remove('selected'); }
+    else { _selectedIds.add(id); el.classList.add('selected'); }
+    _updateSelectBar();
+  } else {
+    if(typeof defaultAction === 'function') defaultAction();
+  }
+}
+function _injectSelectBar() {
+  const bar = document.getElementById('select-bar-container');
+  if(!bar) return;
+  bar.innerHTML = `<div class="select-mode-bar">
+    <span style="font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--text)" id="select-count">0 sélectionné</span>
+    <button class="btn btn-ghost btn-sm" onclick="selectAll()">☑ Tout sélectionner</button>
+    <button class="btn btn-danger btn-sm" id="select-delete-btn" disabled style="opacity:.4" onclick="deleteSelected()">🗑 Supprimer la sélection</button>
+    <button class="btn btn-ghost btn-sm" onclick="_exitSelectMode()">✕ Annuler</button>
+  </div>`;
+  document.querySelectorAll('.skin-card[data-id]').forEach(c=>{
+    c.classList.add('selectable');
+    c.querySelectorAll('.card-actions').forEach(a=>a.style.display='none');
+  });
+}
+function _updateSelectBar() {
+  const countEl = document.getElementById('select-count');
+  if(countEl) countEl.textContent = `${_selectedIds.size} sélectionné${_selectedIds.size>1?'s':''}`;
+  const btn = document.getElementById('select-delete-btn');
+  if(btn) { btn.disabled = _selectedIds.size===0; btn.style.opacity = _selectedIds.size===0?'0.4':'1'; }
+}
+function selectAll() {
+  document.querySelectorAll('.skin-card[data-id]').forEach(c=>{ _selectedIds.add(c.dataset.id); c.classList.add('selected'); });
+  _updateSelectBar();
+}
+function deleteSelected() {
+  const n = _selectedIds.size;
+  if(!n) return;
+  if(!confirm(`Supprimer ${n} skin${n>1?'s':''} ?`)) return;
+  const db = loadData();
+  db.champions.forEach(c=>{ c.skins = (c.skins||[]).filter(s=>!_selectedIds.has(s.id)); });
+  saveData(db);
+  showToast(`${n} skin${n>1?'s':''} supprimé${n>1?'s':''} ✓`);
+  _exitSelectMode();
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('keydown', e => { if(e.key==='Escape'){ closeModal(); closeLightbox(); } });
+navigate('home');
+</script>
+</body>
+</html>
