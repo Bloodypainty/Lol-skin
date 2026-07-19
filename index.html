@@ -31,11 +31,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .nav-item:hover{background:var(--bg3);color:var(--text)}
 .nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:.22s;background:#444450}
 .nav-item[data-page=champions] .nav-dot{background:var(--gold)}
+.nav-item[data-page=icons] .nav-dot{background:var(--teal)}
 .nav-item[data-page=random] .nav-dot{background:linear-gradient(135deg,var(--gold),var(--teal))}
 .nav-item.active{color:var(--text);background:var(--bg3)}
 .nav-item.active[data-page=champions]{border-color:rgba(200,170,110,.3);background:linear-gradient(90deg,rgba(200,170,110,.08),transparent)}
+.nav-item.active[data-page=icons]{border-color:rgba(10,200,185,.3);background:linear-gradient(90deg,rgba(10,200,185,.08),transparent)}
 .nav-item.active[data-page=random]{border-color:rgba(10,200,185,.3);background:linear-gradient(90deg,rgba(10,200,185,.08),transparent)}
 .nav-item.active[data-page=champions] .nav-dot{box-shadow:0 0 10px var(--gold)}
+.nav-item.active[data-page=icons] .nav-dot{box-shadow:0 0 10px var(--teal)}
 .sidebar-bottom{margin-top:auto;padding:14px 10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
 
 /* MAIN */
@@ -240,6 +243,7 @@ input[type=color]{width:44px;height:38px;padding:2px;border-radius:var(--r);bord
     <nav class="sidebar-nav">
       <div class="nav-item" data-page="home" onclick="navigate('home')"><div class="nav-dot"></div>Accueil</div>
       <div class="nav-item" data-page="champions" onclick="navigate('champions')"><div class="nav-dot"></div>Champions</div>
+      <div class="nav-item" data-page="icons" onclick="navigate('icons')"><div class="nav-dot"></div>🖼️ Icônes</div>
     </nav>
     <div class="sidebar-section">Outils</div>
     <nav class="sidebar-nav">
@@ -293,7 +297,7 @@ const RARITY_GRADIENTS = {
   Ultime:'linear-gradient(135deg,#ff6b6b,#feca57,#48dbfb,#a78bfa)',
   Transcendant:'linear-gradient(135deg,#fff6d5,#e8c766,#ffffff)'
 };
-const DEFAULT_DATA = { champions: [] };
+const DEFAULT_DATA = { champions: [], icons: [] };
 
 function loadData() {
   try {
@@ -301,6 +305,7 @@ function loadData() {
     if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
     const saved = JSON.parse(raw);
     if(!saved.champions) saved.champions=[];
+    if(!saved.icons) saved.icons=[];
     return saved;
   } catch(e) { return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
 }
@@ -322,8 +327,8 @@ function importData(file) {
       try {
         const raw = JSON.parse(e.target.result);
         let d;
-        if(raw && Array.isArray(raw.champions)) d = { champions: raw.champions };
-        else if(raw && raw.lol && Array.isArray(raw.lol.champions)) d = { champions: raw.lol.champions };
+        if(raw && Array.isArray(raw.champions)) d = { champions: raw.champions, icons: raw.icons||[] };
+        else if(raw && raw.lol && Array.isArray(raw.lol.champions)) d = { champions: raw.lol.champions, icons: raw.lol.icons||[] };
         else throw new Error("Format non reconnu");
         saveData(d); res(d);
       } catch(err) { rej(err instanceof Error ? err : new Error('JSON invalide')); }
@@ -351,6 +356,7 @@ function navigate(page) {
   switch(page) {
     case 'home':      c.innerHTML = renderHome(); break;
     case 'champions': c.innerHTML = renderChampions(); break;
+    case 'icons':     c.innerHTML = renderIcons(); break;
     case 'random':    c.innerHTML = renderRandom(); break;
     case 'add':       c.innerHTML = renderAdd(); break;
     default: c.innerHTML='<p>404</p>';
@@ -424,12 +430,18 @@ function renderHome() {
       <div class="stat-block"><div class="stat-number">${db.champions.length}</div><div class="stat-label">Champions</div></div>
       <div class="stat-block"><div class="stat-number">${totalSkins}</div><div class="stat-label">Skins</div></div>
       <div class="stat-block"><div class="stat-number">${totalChromas}</div><div class="stat-label">Chromas</div></div>
+      <div class="stat-block"><div class="stat-number">${db.icons.length}</div><div class="stat-label">Icônes</div></div>
     </div>
     <div class="home-grid">
       <div class="game-card lol" onclick="navigate('champions')">
         <div class="game-card-icon">🏆</div>
         <div class="game-card-name">Champions</div>
         <div class="game-card-count">${db.champions.length} champion${db.champions.length!==1?'s':''}</div>
+      </div>
+      <div class="game-card lol" onclick="navigate('icons')">
+        <div class="game-card-icon">🖼️</div>
+        <div class="game-card-name">Icônes</div>
+        <div class="game-card-count">${db.icons.length} icône${db.icons.length!==1?'s':''}</div>
       </div>
       <div class="game-card rand" onclick="navigate('random')">
         <div class="game-card-icon">🎲</div>
@@ -729,6 +741,107 @@ function saveEditSkin(e, oldChampId, skinId) {
 }
 
 // ═══════════════════════════════════════════════════════
+//  ICÔNES DE PROFIL — collection indépendante des champions
+// ═══════════════════════════════════════════════════════
+function renderIcons() {
+  const db = loadData();
+  return `
+    <div class="page-header" style="border-bottom:1px solid var(--border)"><div class="page-title" style="color:var(--teal);text-shadow:0 0 40px rgba(10,200,185,.4)">ICÔNES DE PROFIL</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="count-badge">${db.icons.length} icône${db.icons.length!==1?'s':''}</span>
+        <button class="btn btn-ghost btn-sm" onclick="toggleSelectMode('icon')">☑ Sélectionner</button>
+        <button class="btn btn-primary btn-sm" onclick="navigate('add');addTab('icon')">➕ Ajouter</button>
+      </div>
+    </div>
+    <div id="select-bar-container"></div>
+    <div id="icon-content">${renderIconGrid()}</div>`;
+}
+function renderIconGrid() {
+  const db = loadData();
+  if(!db.icons.length) return `<div class="empty-state"><div class="icon">🖼️</div><p>Aucune icône pour l'instant.<br>Ajoute-en depuis <strong>➕ Ajouter</strong>.</p></div>`;
+  return `<div class="skins-grid">${db.icons.map(ic=>`
+    <div class="skin-card" data-id="${esc(ic.id)}" onclick="iconCardClick(event,this,'${esc(ic.id)}','${esc(ic.image||'')}','${esc(ic.name)}')">
+      <div class="rarity-bar" style="background:var(--teal);opacity:.6"></div>
+      <div class="gem-wrap">${ic.image?`<img src="${esc(ic.image)}" loading="lazy" onerror="this.style.display='none'">`:`<div class="gem" style="background:var(--teal);--glow:rgba(10,200,185,.35)"></div>`}</div>
+      <div class="skin-info">
+        <div class="skin-name">${esc(ic.name)}</div>
+        ${ic.weight&&ic.weight!==5?`<div class="skin-weight-tag" style="color:var(--teal)">🎲 ×${ic.weight}</div>`:''}
+      </div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="card-btn card-btn-move" onclick="moveIcon('${esc(ic.id)}',-1)" title="Déplacer avant">◀</button>
+        <button class="card-btn card-btn-move" onclick="moveIcon('${esc(ic.id)}',1)" title="Déplacer après">▶</button>
+        <button class="card-btn card-btn-edit" onclick="openEditIcon('${esc(ic.id)}')">✏</button>
+        <button class="card-btn card-btn-delete" onclick="deleteIcon('${esc(ic.id)}')">🗑</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+function iconCardClick(e, card, id, image, name) {
+  _cardClick(card, ()=>{ if(image) openLightbox(image, name); });
+}
+function saveIcon(e) {
+  e.preventDefault();
+  const name = document.getElementById('icon-name').value.trim();
+  const image = document.getElementById('icon-img').value.trim();
+  const weight = getWeight('icon-weight');
+  if(!name) { showToast('Le nom est requis','error'); return; }
+  const db = loadData();
+  db.icons.unshift({id:generateId('icon'), name, image: image||null, weight});
+  saveData(db);
+  showToast('Icône ajoutée ✓');
+  addFormReset('icon');
+}
+function deleteIcon(id) {
+  if(!confirm('Supprimer cette icône ?')) return;
+  const db = loadData();
+  db.icons = db.icons.filter(ic=>ic.id!==id);
+  saveData(db); showToast('Icône supprimée ✓'); refresh();
+}
+function moveIcon(id, dir) {
+  const db = loadData();
+  const idx = db.icons.findIndex(ic=>ic.id===id);
+  const newIdx = idx+dir;
+  if(idx===-1||newIdx<0||newIdx>=db.icons.length) return;
+  [db.icons[idx], db.icons[newIdx]] = [db.icons[newIdx], db.icons[idx]];
+  saveData(db); refresh();
+}
+function openEditIcon(id) {
+  const db = loadData();
+  const ic = db.icons.find(x=>x.id===id);
+  if(!ic) return;
+  openModal('Modifier : '+ic.name, `
+    <form onsubmit="saveEditIcon(event,'${esc(id)}')">
+      <div class="form-row single">
+        <div class="form-group"><label>Nom *</label><input type="text" id="edit-icon-name" value="${esc(ic.name)}" required></div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group"><label>URL image</label>
+          <div class="img-url-wrap">
+            <input type="url" id="edit-icon-img" value="${esc(ic.image||'')}" placeholder="https://..." oninput="previewUrl('edit-icon-img','edit-icon-preview')">
+            <img id="edit-icon-preview" class="img-url-preview ${ic.image?'show':''}" src="${esc(ic.image||'')}" alt="Aperçu">
+          </div>
+        </div>
+      </div>
+      ${weightWidget('edit-icon-weight', ic.weight||5)}
+      <div class="btn-row"><button type="submit" class="btn btn-primary">💾 Enregistrer</button><button type="button" class="btn btn-ghost" onclick="closeModal()">✕ Annuler</button></div>
+    </form>`);
+}
+function saveEditIcon(e, id) {
+  e.preventDefault();
+  const name = document.getElementById('edit-icon-name').value.trim();
+  const image = document.getElementById('edit-icon-img').value.trim();
+  const weight = getWeight('edit-icon-weight');
+  if(!name) { showToast('Le nom est requis','error'); return; }
+  const db = loadData();
+  const idx = db.icons.findIndex(ic=>ic.id===id);
+  if(idx===-1) return;
+  db.icons[idx] = {...db.icons[idx], name, image: image||null, weight};
+  saveData(db);
+  showToast('Icône modifiée ✓');
+  closeModal();
+  navigate('icons');
+}
+
+// ═══════════════════════════════════════════════════════
 //  AJOUTER — 2 formulaires séparés
 // ═══════════════════════════════════════════════════════
 function renderAdd() {
@@ -739,6 +852,7 @@ function renderAdd() {
     <div class="tabs">
       <button type="button" class="tab active" id="add-tab-champ" onclick="addTab('champ')">+ Champion</button>
       <button type="button" class="tab" id="add-tab-skin" onclick="addTab('skin')">+ Skin</button>
+      <button type="button" class="tab" id="add-tab-icon" onclick="addTab('icon')">+ Icône</button>
     </div>
 
     <div class="form-section" id="add-form-champ">
@@ -801,17 +915,38 @@ function renderAdd() {
         </div>
         <div class="btn-row"><button type="submit" class="btn btn-primary">💾 Enregistrer</button></div>
       </form>
+    </div>
+
+    <div class="form-section" id="add-form-icon" style="display:none">
+      <div class="form-section-title">🖼️ Ajouter une Icône de profil</div>
+      <form onsubmit="saveIcon(event)">
+        <div class="form-row single">
+          <div class="form-group"><label>Nom *</label><input type="text" id="icon-name" placeholder="ex: Icône Ahri Star Guardian" required></div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group"><label>URL image</label>
+            <div class="img-url-wrap">
+              <input type="url" id="icon-img" placeholder="https://..." oninput="previewUrl('icon-img','icon-preview')">
+              <img id="icon-preview" class="img-url-preview" alt="Aperçu">
+            </div>
+          </div>
+        </div>
+        ${weightWidget('icon-weight', 5)}
+        <div class="btn-row"><button type="submit" class="btn btn-primary">💾 Enregistrer</button></div>
+      </form>
     </div>`;
 }
 function addTab(tab) {
   document.getElementById('add-tab-champ').classList.toggle('active', tab==='champ');
   document.getElementById('add-tab-skin').classList.toggle('active', tab==='skin');
+  document.getElementById('add-tab-icon').classList.toggle('active', tab==='icon');
   document.getElementById('add-form-champ').style.display = tab==='champ'?'':'none';
   document.getElementById('add-form-skin').style.display = tab==='skin'?'':'none';
+  document.getElementById('add-form-icon').style.display = tab==='icon'?'':'none';
 }
 function addFormReset(which) {
   document.getElementById('page-content').innerHTML = renderAdd();
-  if(which==='skin') addTab('skin');
+  if(which!=='champ') addTab(which);
 }
 
 // ═══════════════════════════════════════════════════════
@@ -820,6 +955,18 @@ function addFormReset(which) {
 let _rolledLanes = [];
 let _rolledChamps = []; // [{lane, champ}]
 let _rolledResults = []; // [{lane, champ, skin, chroma}]
+let _rolledIcon = null;
+
+function randWeighted(arr) {
+  if(!arr || !arr.length) return null;
+  const total = arr.reduce((s,x) => s + (x.weight||5), 0);
+  let r = Math.random() * total;
+  for(const item of arr) {
+    r -= (item.weight||5);
+    if(r <= 0) return item;
+  }
+  return arr[arr.length-1];
+}
 
 function renderRandom(){
   return `
@@ -845,6 +992,12 @@ function renderRandom(){
         <div class="rand-step-title"><div class="step-num">3</div>Randomizer les skins (+ chroma si dispo)</div>
         <button class="rand-btn mini" onclick="rollSkins()">🎲 Tirer les skins</button>
         <div class="champ-results-grid" id="skin-results">${renderSkinResults()}</div>
+      </div>
+
+      <div class="rand-step">
+        <div class="rand-step-title" style="color:var(--teal)"><div class="step-num" style="border-color:rgba(10,200,185,.4)">🖼️</div>Randomizer une icône de profil</div>
+        <button class="rand-btn mini" onclick="rollIcon()">🎲 Tirer une icône</button>
+        <div class="champ-results-grid" id="icon-rand-results">${renderIconResult()}</div>
       </div>
     </div>`;
 }
@@ -940,22 +1093,47 @@ function rollAll(){
   rollChamps();
   rollSkins();
 }
+function renderIconResult(){
+  if(!_rolledIcon) return '';
+  return `
+    <div class="champ-result-card" style="max-width:220px">
+      <div class="champ-result-top">
+        ${_rolledIcon.image?`<img src="${esc(_rolledIcon.image)}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border2)" onclick="openLightbox('${esc(_rolledIcon.image)}','${esc(_rolledIcon.name)}')" onerror="this.style.display='none'">`:`<div class="champ-result-avatar no-img" style="width:56px;height:56px">🖼️</div>`}
+        <div>
+          <div class="champ-result-lane" style="color:var(--teal)">Icône de profil</div>
+          <div class="champ-result-name">${esc(_rolledIcon.name)}</div>
+        </div>
+      </div>
+    </div>`;
+}
+function rollIcon(){
+  const db=loadData();
+  const btn=document.querySelector('#icon-rand-results')?.closest('.rand-step')?.querySelector('.rand-btn');
+  if(btn){btn.classList.add('spinning');setTimeout(()=>btn.classList.remove('spinning'),400);}
+  if(!db.icons.length){ showToast('Aucune icône enregistrée','error'); return; }
+  _rolledIcon = randWeighted(db.icons);
+  document.getElementById('icon-rand-results').innerHTML = renderIconResult();
+  showToast('Icône tirée ✓');
+}
 
 // ═══════════════════════════════════════════════════════
 //  MODE SÉLECTION MULTIPLE
 // ═══════════════════════════════════════════════════════
 let _selectMode = false;
 let _selectedIds = new Set();
+let _selectContext = null;
 
-function toggleSelectMode() {
+function toggleSelectMode(context) {
   if(_selectMode) { _exitSelectMode(); return; }
   _selectMode = true;
   _selectedIds = new Set();
+  _selectContext = context||null;
   _injectSelectBar();
 }
 function _exitSelectMode(silent=false) {
   _selectMode = false;
   _selectedIds = new Set();
+  _selectContext = null;
   const bar = document.getElementById('select-bar-container');
   if(bar) bar.innerHTML = '';
   document.querySelectorAll('.skin-card.selectable').forEach(c=>{
@@ -1002,11 +1180,15 @@ function selectAll() {
 function deleteSelected() {
   const n = _selectedIds.size;
   if(!n) return;
-  if(!confirm(`Supprimer ${n} skin${n>1?'s':''} ?`)) return;
+  if(!confirm(`Supprimer ${n} élément${n>1?'s':''} ?`)) return;
   const db = loadData();
-  db.champions.forEach(c=>{ c.skins = (c.skins||[]).filter(s=>!_selectedIds.has(s.id)); });
+  if(_selectContext==='icon') {
+    db.icons = db.icons.filter(ic=>!_selectedIds.has(ic.id));
+  } else {
+    db.champions.forEach(c=>{ c.skins = (c.skins||[]).filter(s=>!_selectedIds.has(s.id)); });
+  }
   saveData(db);
-  showToast(`${n} skin${n>1?'s':''} supprimé${n>1?'s':''} ✓`);
+  showToast(`${n} élément${n>1?'s':''} supprimé${n>1?'s':''} ✓`);
   _exitSelectMode();
 }
 
