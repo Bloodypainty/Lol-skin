@@ -136,6 +136,15 @@ select option{background:var(--bg3)}
 .img-url-preview.show{display:block}
 input[type=color]{width:44px;height:38px;padding:2px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);cursor:pointer}
 
+/* WEIGHT WIDGET */
+.weight-wrap{display:flex;align-items:center;gap:8px;margin-top:6px}
+.weight-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);font-weight:600;white-space:nowrap}
+.weight-slider{flex:1;height:4px;accent-color:var(--teal);cursor:pointer}
+.weight-value{font-size:.8rem;font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--teal);min-width:20px;text-align:center}
+.weight-bar-row{display:flex;gap:3px;align-items:center;margin-top:2px}
+.weight-pip{width:8px;height:8px;border-radius:2px;background:var(--bg4);border:1px solid var(--border);transition:.15s;flex-shrink:0}
+.weight-pip.on{background:var(--teal);border-color:var(--teal)}
+
 /* CHROMA ROWS (builder) */
 .chroma-builder{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 .chroma-row-input{display:flex;gap:8px;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:8px}
@@ -416,6 +425,34 @@ function diffPips(d) {
 function laneBadges(lanes) {
   return (lanes||[]).map(l=>LANES[l]?`<span class="lane-badge"><span class="li">${LANES[l].icon}</span>${LANES[l].label}</span>`:'').join('');
 }
+
+// ── Widget probabilité (utilisé pour les icônes) ──
+function weightWidget(fieldId, defaultVal=5) {
+  return `<div class="form-group">
+    <label>🎲 Probabilité dans le randomizer</label>
+    <div class="weight-wrap">
+      <span class="weight-label">Rare</span>
+      <input type="range" class="weight-slider" id="${fieldId}" min="1" max="10" value="${defaultVal}"
+        oninput="updateWeightPips('${fieldId}')">
+      <span class="weight-label">Fréquent</span>
+      <span class="weight-value" id="${fieldId}-val">${defaultVal}</span>
+    </div>
+    <div class="weight-bar-row" id="${fieldId}-pips">
+      ${Array.from({length:10},(_,i)=>`<div class="weight-pip ${i<defaultVal?'on':''}" id="${fieldId}-pip-${i+1}"></div>`).join('')}
+    </div>
+    <div style="font-size:.67rem;color:var(--text-muted);margin-top:4px">1 = très rare · 5 = normal · 10 = très fréquent</div>
+  </div>`;
+}
+function updateWeightPips(fieldId) {
+  const val = parseInt(document.getElementById(fieldId)?.value||5);
+  const valEl = document.getElementById(fieldId+'-val');
+  if(valEl) { valEl.textContent=val; }
+  for(let i=1;i<=10;i++) {
+    const pip = document.getElementById(fieldId+'-pip-'+i);
+    if(pip) pip.classList.toggle('on', i<=val);
+  }
+}
+function getWeight(fieldId) { return parseInt(document.getElementById(fieldId)?.value||5); }
 
 // ═══════════════════════════════════════════════════════
 //  HOME
